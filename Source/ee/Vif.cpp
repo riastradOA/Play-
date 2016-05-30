@@ -48,6 +48,73 @@ CVif::CVif(unsigned int number, CVpu& vpu, CINTC& intc, uint8* ram, uint8* spr)
     , m_vpu(vpu)
     , m_vifProfilerZone(CProfiler::GetInstance().RegisterZone(string_format("VIF%d", number).c_str()))
 {
+	m_unpacker[0x00] = &CVif::UnpackGeneric<0x00, false, false>;
+	m_unpacker[0x01] = &CVif::UnpackGeneric<0x01, false, false>;
+	m_unpacker[0x02] = &CVif::UnpackGeneric<0x02, false, false>;
+	m_unpacker[0x03] = &CVif::UnpackGeneric<0x03, false, false>;
+	m_unpacker[0x04] = &CVif::UnpackGeneric<0x04, false, false>;
+	m_unpacker[0x05] = &CVif::UnpackGeneric<0x05, false, false>;
+	m_unpacker[0x06] = &CVif::UnpackGeneric<0x06, false, false>;
+	m_unpacker[0x07] = &CVif::UnpackGeneric<0x07, false, false>;
+	m_unpacker[0x08] = &CVif::UnpackGeneric<0x08, false, false>;
+	m_unpacker[0x09] = &CVif::UnpackGeneric<0x09, false, false>;
+	m_unpacker[0x0A] = &CVif::UnpackGeneric<0x0A, false, false>;
+	m_unpacker[0x0B] = &CVif::UnpackGeneric<0x0B, false, false>;
+	m_unpacker[0x0C] = &CVif::UnpackGeneric<0x0C, false, false>;
+	m_unpacker[0x0D] = &CVif::UnpackGeneric<0x0D, false, false>;
+	m_unpacker[0x0E] = &CVif::UnpackGeneric<0x0E, false, false>;
+	m_unpacker[0x0F] = &CVif::UnpackGeneric<0x0F, false, false>;
+
+	m_unpacker[0x10] = &CVif::UnpackGeneric<0x00, true, false>;
+	m_unpacker[0x11] = &CVif::UnpackGeneric<0x01, true, false>;
+	m_unpacker[0x12] = &CVif::UnpackGeneric<0x02, true, false>;
+	m_unpacker[0x13] = &CVif::UnpackGeneric<0x03, true, false>;
+	m_unpacker[0x14] = &CVif::UnpackGeneric<0x04, true, false>;
+	m_unpacker[0x15] = &CVif::UnpackGeneric<0x05, true, false>;
+	m_unpacker[0x16] = &CVif::UnpackGeneric<0x06, true, false>;
+	m_unpacker[0x17] = &CVif::UnpackGeneric<0x07, true, false>;
+	m_unpacker[0x18] = &CVif::UnpackGeneric<0x08, true, false>;
+	m_unpacker[0x19] = &CVif::UnpackGeneric<0x09, true, false>;
+	m_unpacker[0x1A] = &CVif::UnpackGeneric<0x0A, true, false>;
+	m_unpacker[0x1B] = &CVif::UnpackGeneric<0x0B, true, false>;
+	m_unpacker[0x1C] = &CVif::UnpackGeneric<0x0C, true, false>;
+	m_unpacker[0x1D] = &CVif::UnpackGeneric<0x0D, true, false>;
+	m_unpacker[0x1E] = &CVif::UnpackGeneric<0x0E, true, false>;
+	m_unpacker[0x1F] = &CVif::UnpackGeneric<0x0F, true, false>;
+
+	m_unpacker[0x20] = &CVif::UnpackGeneric<0x00, false, true>;
+	m_unpacker[0x21] = &CVif::UnpackGeneric<0x01, false, true>;
+	m_unpacker[0x22] = &CVif::UnpackGeneric<0x02, false, true>;
+	m_unpacker[0x23] = &CVif::UnpackGeneric<0x03, false, true>;
+	m_unpacker[0x24] = &CVif::UnpackGeneric<0x04, false, true>;
+	m_unpacker[0x25] = &CVif::UnpackGeneric<0x05, false, true>;
+	m_unpacker[0x26] = &CVif::UnpackGeneric<0x06, false, true>;
+	m_unpacker[0x27] = &CVif::UnpackGeneric<0x07, false, true>;
+	m_unpacker[0x28] = &CVif::UnpackGeneric<0x08, false, true>;
+	m_unpacker[0x29] = &CVif::UnpackGeneric<0x09, false, true>;
+	m_unpacker[0x2A] = &CVif::UnpackGeneric<0x0A, false, true>;
+	m_unpacker[0x2B] = &CVif::UnpackGeneric<0x0B, false, true>;
+	m_unpacker[0x2C] = &CVif::UnpackGeneric<0x0C, false, true>;
+	m_unpacker[0x2D] = &CVif::UnpackGeneric<0x0D, false, true>;
+	m_unpacker[0x2E] = &CVif::UnpackGeneric<0x0E, false, true>;
+	m_unpacker[0x2F] = &CVif::UnpackGeneric<0x0F, false, true>;
+
+	m_unpacker[0x30] = &CVif::UnpackGeneric<0x00, true, true>;
+	m_unpacker[0x31] = &CVif::UnpackGeneric<0x01, true, true>;
+	m_unpacker[0x32] = &CVif::UnpackGeneric<0x02, true, true>;
+	m_unpacker[0x33] = &CVif::UnpackGeneric<0x03, true, true>;
+	m_unpacker[0x34] = &CVif::UnpackGeneric<0x04, true, true>;
+	m_unpacker[0x35] = &CVif::UnpackGeneric<0x05, true, true>;
+	m_unpacker[0x36] = &CVif::UnpackGeneric<0x06, true, true>;
+	m_unpacker[0x37] = &CVif::UnpackGeneric<0x07, true, true>;
+	m_unpacker[0x38] = &CVif::UnpackGeneric<0x08, true, true>;
+	m_unpacker[0x39] = &CVif::UnpackGeneric<0x09, true, true>;
+	m_unpacker[0x3A] = &CVif::UnpackGeneric<0x0A, true, true>;
+	m_unpacker[0x3B] = &CVif::UnpackGeneric<0x0B, true, true>;
+	m_unpacker[0x3C] = &CVif::UnpackGeneric<0x0C, true, true>;
+	m_unpacker[0x3D] = &CVif::UnpackGeneric<0x0D, true, true>;
+	m_unpacker[0x3E] = &CVif::UnpackGeneric<0x0E, true, true>;
+	m_unpacker[0x3F] = &CVif::UnpackGeneric<0x0F, true, true>;
 }
 
 void CVif::Reset()
@@ -655,6 +722,19 @@ void CVif::Cmd_STMASK(StreamType& stream, CODE command)
 
 void CVif::Cmd_UNPACK(StreamType& stream, CODE nCommand, uint32 nDstAddr)
 {
+#if 1
+	uint32 cl = m_CYCLE.nCL;
+	uint32 wl = m_CYCLE.nWL;
+	if(wl == 0) 
+	{
+		wl = UINT_MAX;
+		cl = UINT_MAX;
+	}
+	bool clGreaterEqualWl = (cl >= wl);
+	bool useMask = (nCommand.nCMD & 0x10) != 0;
+	auto unpackFct = m_unpacker[(nCommand.nCMD & 0x0F) | ((clGreaterEqualWl ? 1 : 0) << 4) | ((useMask ? 1 : 0) << 5)];
+	((*this).*(unpackFct))(stream, nCommand, nDstAddr);
+#else
 	assert((nCommand.nCMD & 0x60) == 0x60);
 
 	const auto vuMem = m_vpu.GetVuMemory();
@@ -800,6 +880,7 @@ void CVif::Cmd_UNPACK(StreamType& stream, CODE nCommand, uint32 nDstAddr)
 	}
 
 	m_NUM = static_cast<uint8>(currentNum);
+#endif
 }
 
 bool CVif::Unpack_ReadValue(const CODE& nCommand, StreamType& stream, uint128& writeValue, bool usn)

@@ -217,6 +217,225 @@ protected:
 
 	uint32 GetMaskOp(unsigned int, unsigned int) const;
 
+	template <uint8 dataType>
+	bool UnpackReadValueGeneric(StreamType& stream, uint128& writeValue, bool usn)
+	{
+		bool success = false;
+		switch(dataType)
+		{
+		case 0x00:
+			//S-32
+			success = Unpack_S32(stream, writeValue);
+			break;
+		case 0x01:
+			//S-16
+			success = Unpack_S16(stream, writeValue, usn);
+			break;
+		case 0x02:
+			//S-8
+			success = Unpack_S8(stream, writeValue, usn);
+			break;
+		case 0x04:
+			//V2-32
+			success = Unpack_V32(stream, writeValue, 2);
+			break;
+		case 0x05:
+			//V2-16
+			success = Unpack_V16(stream, writeValue, 2, usn);
+			break;
+		case 0x06:
+			//V2-8
+			success = Unpack_V8(stream, writeValue, 2, usn);
+			break;
+		case 0x08:
+			//V3-32
+			success = Unpack_V32(stream, writeValue, 3);
+			break;
+		case 0x09:
+			//V3-16
+			success = Unpack_V16(stream, writeValue, 3, usn);
+			break;
+		case 0x0A:
+			//V3-8
+			success = Unpack_V8(stream, writeValue, 3, usn);
+			break;
+		case 0x0C:
+			//V4-32
+			success = Unpack_V32(stream, writeValue, 4);
+			break;
+		case 0x0D:
+			//V4-16
+			success = Unpack_V16(stream, writeValue, 4, usn);
+			break;
+		case 0x0E:
+			//V4-8
+			success = Unpack_V8(stream, writeValue, 4, usn);
+			break;
+		case 0x0F:
+			//V4-5
+			success = Unpack_V45(stream, writeValue);
+			break;
+		default:
+			assert(0);
+			break;
+		}
+		return success;
+	}
+
+	template <uint8 dataType, bool clGreaterEqualWl, bool useMask>
+	void UnpackGeneric(StreamType& stream, CODE nCommand, uint32 nDstAddr)
+	{
+		assert((nCommand.nCMD & 0x60) == 0x60);
+
+		const auto vuMem = m_vpu.GetVuMemory();
+		const auto vuMemSize = m_vpu.GetVuMemorySize();
+		bool usn = (m_CODE.nIMM & 0x4000) != 0;
+		//bool useMask = (nCommand.nCMD & 0x10) != 0;
+		uint32 cl = m_CYCLE.nCL;
+		uint32 wl = m_CYCLE.nWL;
+		if(wl == 0) 
+		{
+			wl = UINT_MAX;
+			cl = UINT_MAX;
+		}
+
+		if(m_NUM == nCommand.nNUM)
+		{
+			m_readTick = 0;
+			m_writeTick = 0;
+		}
+
+		uint32 currentNum = (m_NUM == 0) ? 256 : m_NUM;
+		uint32 codeNum = (m_CODE.nNUM == 0) ? 256 : m_CODE.nNUM;
+		uint32 transfered = codeNum - currentNum;
+
+		if(cl > wl)
+		{
+			nDstAddr += cl * (transfered / wl) + (transfered % wl);
+		}
+		else
+		{
+			nDstAddr += transfered;
+		}
+
+		nDstAddr *= 0x10;
+
+		while(currentNum != 0)
+		{
+			bool mustWrite = false;
+			uint128 writeValue;
+			memset(&writeValue, 0, sizeof(writeValue));
+
+			//if(cl >= wl)
+			if(clGreaterEqualWl)
+			{
+				if(m_readTick < wl || wl == 0)
+				{
+					bool success = UnpackReadValueGeneric<dataType>(stream, writeValue, usn);
+					if(!success) break;
+					mustWrite = true;
+				}
+			}
+			else
+			{
+				if(m_writeTick < cl)
+				{
+					bool success = UnpackReadValueGeneric<dataType>(stream, writeValue, usn);
+					if(!success) break;
+				}
+
+				mustWrite = true;
+			}
+
+			if(mustWrite)
+			{
+				auto dst = reinterpret_cast<uint128*>(vuMem + nDstAddr);
+
+				for(unsigned int i = 0; i < 4; i++)
+				{
+					uint32 maskOp = useMask ? GetMaskOp(i, m_writeTick) : MASK_DATA;
+
+					if(maskOp == MASK_DATA)
+					{
+						if(m_MODE == MODE_OFFSET)
+						{
+							writeValue.nV[i] += m_R[i];
+						}
+						else if(m_MODE == MODE_DIFFERENCE)
+						{
+							writeValue.nV[i] += m_R[i];
+							m_R[i] = writeValue.nV[i];
+						}
+
+						dst->nV[i] = writeValue.nV[i];
+					}
+					else if(maskOp == MASK_ROW)
+					{
+						dst->nV[i] = m_R[i];
+					}
+					else if(maskOp == MASK_COL)
+					{
+						int index = (m_writeTick > 3) ? 3 : m_writeTick;
+						dst->nV[i] = m_C[index];
+					}
+					else if(maskOp == MASK_MASK)
+					{
+						//Don't write anything
+					}
+					else
+					{
+						assert(0);
+					}
+				}
+
+				currentNum--;
+			}
+
+			//if(cl >= wl)
+			if(clGreaterEqualWl)
+			{
+				m_writeTick = std::min<uint32>(m_writeTick + 1, wl);
+				m_readTick = std::min<uint32>(m_readTick + 1, cl);
+
+				if(m_readTick == cl)
+				{
+					m_writeTick = 0;
+					m_readTick = 0;
+				}
+			}
+			else
+			{
+				m_writeTick = std::min<uint32>(m_writeTick + 1, wl);
+				m_readTick = std::min<uint32>(m_readTick + 1, cl);
+
+				if(m_writeTick == wl)
+				{
+					m_writeTick = 0;
+					m_readTick = 0;
+				}
+			}
+
+			nDstAddr += 0x10;
+			nDstAddr &= (vuMemSize - 1);
+		}
+
+		if(currentNum != 0)
+		{
+			m_STAT.nVPS = 1;
+		}
+		else
+		{
+			stream.Align32();
+			m_STAT.nVPS = 0;
+		}
+
+		m_NUM = static_cast<uint8>(currentNum);
+	}
+
+	typedef void (CVif::*Unpacker)(StreamType& stream, CODE nCommand, uint32 nDstAddr);
+
+	Unpacker m_unpacker[0x40];
+
 	virtual void PrepareMicroProgram();
 	void StartMicroProgram(uint32);
 	void StartDelayedMicroProgram(uint32);
