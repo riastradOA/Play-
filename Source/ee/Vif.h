@@ -2,12 +2,12 @@
 
 #include "Types.h"
 #include "Convertible.h"
+#include "Vpu.h"
 #include "../uint128.h"
 #include "../Profiler.h"
 #include "zip/ZipArchiveWriter.h"
 #include "zip/ZipArchiveReader.h"
 
-class CVpu;
 class CINTC;
 
 class CVif
@@ -282,7 +282,7 @@ protected:
 		return success;
 	}
 
-	template <uint8 dataType, bool clGreaterEqualWl, bool useMask>
+	template <uint8 dataType, bool clGreaterEqualWl, bool useMask, uint8 mode>
 	void UnpackGeneric(StreamType& stream, CODE nCommand, uint32 nDstAddr)
 	{
 		assert((nCommand.nCMD & 0x60) == 0x60);
@@ -293,7 +293,7 @@ protected:
 		//bool useMask = (nCommand.nCMD & 0x10) != 0;
 		uint32 cl = m_CYCLE.nCL;
 		uint32 wl = m_CYCLE.nWL;
-		if(wl == 0) 
+		if(wl == 0)
 		{
 			wl = UINT_MAX;
 			cl = UINT_MAX;
@@ -357,11 +357,11 @@ protected:
 
 					if(maskOp == MASK_DATA)
 					{
-						if(m_MODE == MODE_OFFSET)
+						if(mode == MODE_OFFSET)
 						{
 							writeValue.nV[i] += m_R[i];
 						}
-						else if(m_MODE == MODE_DIFFERENCE)
+						else if(mode == MODE_DIFFERENCE)
 						{
 							writeValue.nV[i] += m_R[i];
 							m_R[i] = writeValue.nV[i];
@@ -434,7 +434,7 @@ protected:
 
 	typedef void (CVif::*Unpacker)(StreamType& stream, CODE nCommand, uint32 nDstAddr);
 
-	Unpacker m_unpacker[0x40];
+	Unpacker m_unpacker[0x100];
 
 	virtual void PrepareMicroProgram();
 	void StartMicroProgram(uint32);
