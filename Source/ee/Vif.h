@@ -101,11 +101,19 @@ protected:
 
 		void Reset();
 
-		uint32 GetAvailableReadBytes() const;
-		uint32 GetRemainingDmaTransferSize() const;
-		void Read(void*, uint32);
+		inline uint32 GetAvailableReadBytes() const
+		{
+			return GetRemainingDmaTransferSize() + (BUFFERSIZE - m_bufferPosition);
+		}
+
+		inline uint32 GetRemainingDmaTransferSize() const
+		{
+			return m_endAddress - m_nextAddress;
+		}
+
+		inline void Read(void*, uint32);
 		void Flush();
-		void Align32();
+		inline void Align32();
 		void SetDmaParams(uint32, uint32, bool);
 		void SetFifoParams(uint8*, uint32);
 
@@ -113,7 +121,7 @@ protected:
 		void Advance(uint32);
 
 	private:
-		void SyncBuffer();
+		inline void SyncBuffer();
 
 		enum
 		{
@@ -207,15 +215,15 @@ protected:
 	void Cmd_STMASK(StreamType&, CODE);
 
 	bool Unpack_ReadValue(const CODE&, StreamType&, uint128&, bool);
-	bool Unpack_S32(StreamType&, uint128&);
-	bool Unpack_S16(StreamType&, uint128&, bool);
-	bool Unpack_S8(StreamType&, uint128&, bool);
-	bool Unpack_V16(StreamType&, uint128&, unsigned int, bool);
-	bool Unpack_V8(StreamType&, uint128&, unsigned int, bool);
-	bool Unpack_V32(StreamType&, uint128&, unsigned int);
-	bool Unpack_V45(StreamType&, uint128&);
+	inline bool Unpack_S32(StreamType&, uint128&);
+	inline bool Unpack_S16(StreamType&, uint128&, bool);
+	inline bool Unpack_S8(StreamType&, uint128&, bool);
+	inline bool Unpack_V16(StreamType&, uint128&, unsigned int, bool);
+	inline bool Unpack_V8(StreamType&, uint128&, unsigned int, bool);
+	inline bool Unpack_V32(StreamType&, uint128&, unsigned int);
+	inline bool Unpack_V45(StreamType&, uint128&);
 
-	uint32 GetMaskOp(unsigned int, unsigned int) const;
+	inline uint32 GetMaskOp(unsigned int, unsigned int) const;
 
 	template <uint8 dataType>
 	bool UnpackReadValueGeneric(StreamType& stream, uint128& writeValue, bool usn)

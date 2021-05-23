@@ -280,7 +280,7 @@ namespace Iop
 			uint32 m_nextSampleAddr = 0;
 			uint32 m_repeatAddr = 0;
 			uint32 m_irqAddr = 0;
-			int16 m_buffer[BUFFER_SAMPLES * 2];
+			int16 alignas(16) m_buffer[BUFFER_SAMPLES * 2];
 			uint16 m_pitch;
 			int32 m_s1;
 			int32 m_s2;

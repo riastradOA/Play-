@@ -39,6 +39,6 @@ private:
 		QWORD_SIZE = 0x10,
 	};
 
-	uint8 m_directQwordBuffer[QWORD_SIZE];
+	uint8 alignas(16) m_directQwordBuffer[QWORD_SIZE];
 	uint32 m_directQwordBufferIndex = 0;
 };

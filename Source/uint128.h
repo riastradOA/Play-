@@ -3,7 +3,7 @@
 
 #include "Types.h"
 
-struct uint128
+struct alignas(16) uint128
 {
 	union {
 		struct

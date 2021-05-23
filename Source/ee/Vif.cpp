@@ -1342,16 +1342,6 @@ void CVif::CFifoStream::SetFifoParams(uint8* source, uint32 size)
 	SyncBuffer();
 }
 
-uint32 CVif::CFifoStream::GetAvailableReadBytes() const
-{
-	return GetRemainingDmaTransferSize() + (BUFFERSIZE - m_bufferPosition);
-}
-
-uint32 CVif::CFifoStream::GetRemainingDmaTransferSize() const
-{
-	return m_endAddress - m_nextAddress;
-}
-
 void CVif::CFifoStream::Align32()
 {
 	unsigned int remainBytes = m_bufferPosition & 0x03;
